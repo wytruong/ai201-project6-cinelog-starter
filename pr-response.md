@@ -36,8 +36,14 @@ The tradeoff is that if CineLog later adds social/discovery features (following 
 
 ## Comment 5 — Sort order
 **My position:**
+I agree with the maintainer — I'm changing `get_watchlist()` to sort by `date_added` descending (most recently added first), replacing the current alphabetical-by-title sort.
+
 **Reasoning:**
+A watchlist is fundamentally about current intent — it's the list of "what am I thinking about watching next," not a reference list I'm searching through. When I add something new to my watchlist, it's usually because I just heard about it or I'm currently excited about it, and that's exactly the thing I want to see first the next time I open the app. Alphabetical order buries that recency signal — a film I added yesterday could easily land at the bottom of the list if its title starts with a letter late in the alphabet, even though it's the most relevant thing to me right now.
+
 **Engagement with reviewer's point:**
+I think the maintainer's instinct here is correct, and it's also worth noting this brings the watchlist in line with how `get_collection()` already sorts (`date_added.desc()`), which makes the two features behave consistently from a user's perspective — if collection already surfaces "recently watched" first, watchlist surfacing "recently added" first is the parallel behavior a user would expect. The one case where alphabetical genuinely helps is if someone has a long watchlist and is specifically hunting for a title they remember adding a while back ("did I already add Dune?") — but I think that's a search/filter problem, not a sort-order problem, and solving it by defaulting to alphabetical would make the more common case (checking in on recent additions) worse for everyone to fix a less common one.
+
 
 ## Comment 6 — Rebase
 **What conflicted:**
