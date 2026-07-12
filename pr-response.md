@@ -1,7 +1,7 @@
 # PR Response Doc — CineLog Watchlist Feature
 
 ## AI Usage
-<!-- Fill in at the end -->
+I used AI (Claude) throughout this project for: orientation on the existing codebase patterns (understanding `add_to_collection()` and the test fixture structure before writing the watchlist equivalents), guidance on git workflow (using `git add -p` to split commits into logical units, and resolving the rebase conflicts), and as a sounding board while drafting my Comment 4 and Comment 5 responses. For Comment 4, I confirmed via grep that the codebase has no social/friend features before deciding on a private-by-default position — the reasoning and final argument are my own. For Comment 5, I chose to agree with the maintainer's date-added suggestion based on my own view of how a watchlist should behave; AI helped me structure the writeup but the position and reasoning are mine.
 
 ## Comment 1 — Rename
 **What I did:**
@@ -56,4 +56,25 @@ For `.gitignore`, I kept the union of both versions' entries. For `models.py`, I
 After resolving, `git rebase --continue` completed with "Successfully rebased and updated refs/heads/feature/watchlist" and no further conflicts. I ran the full test suite (`pytest tests/ -v`) and all 7 tests passed, confirming the watchlist service code — which references `film_id` in queries but never hardcodes its type — worked correctly against the new UUID column without needing any changes itself. I also confirmed with `git log --oneline` that the branch history is linear with no merge commits.
 
 ## PR Description
-<!-- Written at the end -->
+
+### What this feature does
+This PR adds a watchlist feature to CineLog, letting users save films they want to watch later (separate from their collection of films already watched). Users can add a film to their watchlist, and the API returns their full watchlist sorted with the most recently added films first.
+
+### Design decisions
+- **Default visibility:** New watchlist entries default to `public=False` (private). CineLog currently has no social or discovery features (no follows, friend feeds, or ways to view another user's data), so defaulting to public would expose user data with no corresponding benefit. Private-by-default is the safer, more conservative choice until a real sharing feature exists.
+- **Sort order:** `get_watchlist()` sorts by `date_added` descending (most recent first), matching the maintainer's suggestion and mirroring how `get_collection()` already sorts. A watchlist reflects current intent — what a user is thinking about watching next — so recently added films are the most relevant to surface first.
+
+### How to manually test
+1. Start the app: `python app.py`
+2. Create a user and a film in the database (via the existing collection endpoints, or directly via a Python shell using the `User`/`Film` models).
+3. Add a film to the watchlist:
+    curl -X POST http://127.0.0.1:5000/watchlist/<user_id>/add 
+    -H "Content-Type: application/json" 
+    -d '{"film_id": "<film_id>"}'
+    Confirm the response is `201` and includes `"public": false`.
+4. Add the same film again with the same request — confirm it returns an error (`AlreadyOnWatchlistError`) instead of creating a duplicate.
+5. View the watchlist: 
+    curl http://127.0.0.1:5000/watchlist/<user_id>
+    Add a second film and confirm it appears first in the list (most recently added first).
+6. Try adding a film with a made-up `film_id` (e.g. `"00000000-0000-0000-0000-000000000000"`) — confirm it returns an error rather than a 500.
+7. Run the automated test suite: `pytest tests/ -v` — all 7 tests should pass.
