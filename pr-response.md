@@ -26,8 +26,13 @@ Modeled this on `test_add_to_collection_nonexistent_film_raises` in `tests/test_
 
 ## Comment 4 — Default visibility
 **My position:**
+I'm changing the default for `public` on `WatchlistEntry` from `True` to `False`.
+
 **Reasoning:**
+I searched the codebase for any social or sharing functionality (`grep -rn "friend"`, `"follow"`, `"social"` across the app) and found nothing: no follows, no friend feeds, no way for one user to view another user's watchlist or collection. The only endpoints that exist are `GET /watchlist/<user_id>` and `GET /collection/<user_id>`, both scoped to a single user's own data. Given that, defaulting `public` to `True` exposes data with no corresponding feature to make use of that exposure. There's currently no way for "public" to actually mean anything to another user. Defaulting to `False` is the more conservative, safer choice: it doesn't silently opt users into visibility they didn't ask for, and it follows the general privacy-by-default principle of opt-in over opt-out.
+
 **Tradeoff acknowledged:**
+The tradeoff is that if CineLog later adds social/discovery features (following users, a friend activity feed, etc.), a `False` default means every existing watchlist entry stays private unless the user explicitly changes it — which could slow adoption of that future feature, since most users won't go back and toggle old entries. A `True` default would have made that future feature "just work" without a data migration. But I think that's a reasonable tradeoff: it's easier and safer to prompt users to opt in to a new sharing feature when it launches than to have silently exposed their data the whole time before that feature existed.
 
 ## Comment 5 — Sort order
 **My position:**
