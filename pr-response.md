@@ -47,8 +47,13 @@ I think the maintainer's instinct here is correct, and it's also worth noting th
 
 ## Comment 6 — Rebase
 **What conflicted:**
+Rebasing onto `origin/main` surfaced a conflict in `models.py`. While `feature/watchlist` was open, `main` had a refactor that migrated `Film.id` from an integer primary key to a UUID string (`db.String(36)`), and `CollectionEntry.film_id` was updated to match. My branch's `WatchlistEntry` model was still defined with `film_id = db.Column(db.Integer, ...)` from before that refactor, so the merge couldn't automatically reconcile the two versions of `models.py`. There was also a smaller conflict in `.gitignore`, since both branches added one independently.
+
 **How I resolved it:**
+For `.gitignore`, I kept the union of both versions' entries. For `models.py`, I kept the `WatchlistEntry` model (which only exists on my branch) but updated `film_id` from `db.Column(db.Integer, db.ForeignKey("film.id"), ...)` to `db.Column(db.String(36), db.ForeignKey("film.id"), ...)` to match the now-UUID `Film.id`, following the same pattern already applied to `CollectionEntry.film_id` in the refactor.
+
 **How I verified no conflict remains:**
+After resolving, `git rebase --continue` completed with "Successfully rebased and updated refs/heads/feature/watchlist" and no further conflicts. I ran the full test suite (`pytest tests/ -v`) and all 7 tests passed, confirming the watchlist service code — which references `film_id` in queries but never hardcodes its type — worked correctly against the new UUID column without needing any changes itself. I also confirmed with `git log --oneline` that the branch history is linear with no merge commits.
 
 ## PR Description
 <!-- Written at the end -->
